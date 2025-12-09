@@ -2,6 +2,7 @@ import streamlit as st
 import random
 import datetime
 import pandas as pd
+import feedparser
 
 # CONFIGURAÇÃO DA PÁGINA
 st.set_page_config(page_title="Home", page_icon="🏠")
@@ -11,59 +12,13 @@ if "autenticado" not in st.session_state or not st.session_state.autenticado:
     st.warning("⚠️ Você precisa se cadastrar para acessar esta página.")
     st.stop()
 
-# GARANTIR LISTA DE USUÁRIOS
+# GARANTIR LISTAS NO SESSION STATE
 if "usuarios" not in st.session_state:
     st.session_state.usuarios = []
-
-
-
-
-
-# noticias.py
-import streamlit as st
-import feedparser
-
-FEEDS = [
-    "https://g1.globo.com/rss/g1/educacao/",   # G1 Educação
-    "https://www.bbc.co.uk/portuguese/index.xml"  # BBC Portuguese (exemplo)
-]
-
-def page_noticias():
-    st.title("📰 Notícias - Educação e Ciência")
-    for feed in FEEDS:
-        try:
-            d = feedparser.parse(feed)
-            st.subheader(d.feed.get('title','Feed'))
-            for entry in d.entries[:5]:
-                st.markdown(f"- [{entry.title}]({entry.link}) — {entry.get('published','')}")
-        except Exception as e:
-            st.error(f"Erro ao carregar feed {feed}: {e}")
-import streamlit as st
-
-def pagina():
-    st.title("Cursos Gratuitos Recomendados")
-
-    st.write("Aqui você pode adicionar links reais de cursos gratuitos:")
-
-    st.markdown("""
-    ### 📘 Programação
-    - [Python para Iniciantes – Curso em Vídeo](https://www.cursoemvideo.com/course/python-3/)
-    - [Introdução à Programação – Udemy](https://www.udemy.com/course/introducao-a-programacao/)
-    - [Git e GitHub – DIO](https://web.dio.me/course/introducao-ao-git-e-ao-github/learning/)
-
-    ### 📗 Matemática
-    - [Matemática Básica – Khan Academy](https://pt.khanacademy.org/math)
-    - [Funções – Univesp](https://www.youtube.com/watch?v=t6v5biZdmFw)
-
-    ### 📙 Inglês
-    - [Duolingo](https://www.duolingo.com/)
-    - [BBC Learning English](https://www.bbc.co.uk/learningenglish)
-    """)
-
-
-
-
-
+if "respostas_quiz" not in st.session_state:
+    st.session_state.respostas_quiz = {}
+if "historico" not in st.session_state:
+    st.session_state.historico = []
 
 # ---------------------------------------------
 # DADOS DO SISTEMA
@@ -88,9 +43,9 @@ materias_matematica = ["Álgebra", "Geometria", "Trigonometria"]
 materias_redação = ["Acentuação", "Caligrafia", "Estrutura"]
 
 # ---------------------------------------------
-# SORTEIO DO FOCO DIÁRIO (matéria e tempo)
+# SORTEIO DO FOCO DIÁRIO
 # ---------------------------------------------
-if "area_do_dia" not in st.session_state or "materia_do_dia" not in st.session_state:
+if "area_do_dia" not in st.session_state:
     area_do_dia = random.choice(areas_principais)
     st.session_state.area_do_dia = area_do_dia
 
@@ -107,16 +62,15 @@ if "area_do_dia" not in st.session_state or "materia_do_dia" not in st.session_s
 
     st.session_state.materia_do_dia = materia
 
-    min_minutes = 30
-    max_minutes = 180
-    tempo = random.randint(min_minutes, max_minutes)
+    tempo = random.randint(30, 180)
     horas = tempo // 60
     minutos = tempo % 60
     st.session_state.tempo_sugerido = f"{horas:02}h {minutos:02}m"
 
 # ---------------------------------------------
-# QUIZ COMPLETO POR ÁREA E NÍVEL (ENEM-like, reformulado)
+# QUIZ COMPLETO (RESTAURADO)
 # ---------------------------------------------
+
 quiz = {
     "Linguagens": {
         "Fácil": [
@@ -192,59 +146,125 @@ quiz = {
 
     "Redação": {
         "Fácil": [
-            {"pergunta": "Qual é a parte inicial de um texto dissertativo?", "alternativas": ["Introdução", "Conclusão", "Título", "Proposta"], "correta": "Introdução"},
-            {"pergunta": "O propósito da conclusão é:", "alternativas": ["Encerrar a ideia", "Apresentar fatos novos", "Contradizer argumentos", "Criar suspense"], "correta": "Encerrar a ideia"},
-            {"pergunta": "Um argumento é:", "alternativas": ["Uma justificativa", "Um desenho", "Uma opinião solta", "Um verbo"], "correta": "Uma justificativa"},
+            {"pergunta": "Qual é a parte inicial de um texto dissertativo?",
+             "alternativas": ["Introdução", "Conclusão", "Título", "Proposta"],
+             "correta": "Introdução"},
+            {"pergunta": "O propósito da conclusão é:",
+             "alternativas": ["Encerrar a ideia", "Apresentar fatos novos", "Criar suspense", "Confundir o leitor"],
+             "correta": "Encerrar a ideia"},
+            {"pergunta": "Um argumento é:",
+             "alternativas": ["Uma justificativa", "Um verbo", "Um desenho", "Uma opinião solta"],
+             "correta": "Uma justificativa"},
         ],
         "Médio": [
-            {"pergunta": "A tese é:", "alternativas": ["A opinião principal", "Um dado estatístico", "Um exemplo", "Um apelo emocional"], "correta": "A opinião principal"},
-            {"pergunta": "A coesão textual se refere a:", "alternativas": ["Ligação entre as partes", "Conteúdo repetitivo", "Velocidade da leitura", "Caracteres especiais"], "correta": "Ligação entre as partes"},
-            {"pergunta": "Um conectivo adversativo expressa:", "alternativas": ["Ideia de oposição", "Causa", "Adição", "Condição"], "correta": "Ideia de oposição"},
+            {"pergunta": "A tese é:",
+             "alternativas": ["A opinião principal", "Um dado estatístico", "Um exemplo", "Uma metáfora"],
+             "correta": "A opinião principal"},
+            {"pergunta": "A coesão textual se refere a:",
+             "alternativas": ["Ligação entre as partes", "Repetições aleatórias", "Velocidade da leitura", "Número de parágrafos"],
+             "correta": "Ligação entre as partes"},
+            {"pergunta": "Um conectivo adversativo expressa:",
+             "alternativas": ["Oposição", "Adição", "Causa", "Conclusão"],
+             "correta": "Oposição"},
         ],
         "Difícil": [
-            {"pergunta": "Uma intervenção completa no ENEM precisa ter:", "alternativas": ["Ação + agente + modo + efeito", "Apenas uma ação", "Somente citação", "Justificativa emocional"], "correta": "Ação + agente + modo + efeito"},
-            {"pergunta": "Citação indireta é:", "alternativas": ["Ideia de outro autor com suas palavras", "Reprodução literal", "Um dado inventado", "Opinião pessoal sem fonte"], "correta": "Ideia de outro autor com suas palavras"},
-            {"pergunta": "A norma-padrão exige o uso de:", "alternativas": ["Estruturas formais", "Gírias", "Abreviações informais", "Emojis no texto"], "correta": "Estruturas formais"},
-        ],
-    },
+            {"pergunta": "Uma intervenção completa no ENEM precisa ter:",
+             "alternativas": ["Ação + agente + modo + efeito", "Apenas ação", "Somente citação", "Exemplos pessoais"],
+             "correta": "Ação + agente + modo + efeito"},
+            {"pergunta": "Citação indireta é:",
+             "alternativas": ["Ideia de outro autor com suas palavras", "Cópia literal", "Opinião sem fonte", "Fato inventado"],
+             "correta": "Ideia de outro autor com suas palavras"},
+            {"pergunta": "A norma-padrão exige o uso de:",
+             "alternativas": ["Estruturas formais", "Gírias", "Emojis", "Abreviações informais"],
+             "correta": "Estruturas formais"},
+        ]
+    }
 }
 
 # ---------------------------------------------
-# FUNÇÃO DA HOME
+# PÁGINAS: Notícias e Cursos (via RSS)
+# ---------------------------------------------
+
+def page_noticias():
+    st.title("📰 Notícias - Atualidades do Dia")
+    st.write("Notícias reais e atualizadas automaticamente (via RSS).")
+
+    feeds = {
+        "G1 - Brasil": "https://g1.globo.com/rss/g1/brasil/",
+        "G1 - Mundo": "https://g1.globo.com/rss/g1/mundo/",
+        "BBC Brasil": "https://feeds.bbci.co.uk/portuguese/rss.xml",
+        "UOL Notícias": "https://rss.uol.com.br/feed/noticias.xml",
+    }
+
+    for nome, url in feeds.items():
+        st.subheader(f"🌍 {nome}")
+        try:
+            noticias = feedparser.parse(url)
+            if hasattr(noticias, "entries") and noticias.entries:
+                for item in noticias.entries[:7]:
+                    published = item.get('published', item.get('pubDate', ''))
+                    st.markdown(f"- [{item.title}]({item.link}) — {published}")
+            else:
+                st.info(f"Nenhuma notícia encontrada em {nome}.")
+        except Exception as e:
+            st.error(f"Erro ao carregar {nome}: {e}")
+
+        st.write("---")
+
+def page_cursos():
+    st.title("📘 Cursos & Oportunidades — Notícias Reais")
+    st.write("Acompanhe novidades sobre cursos, educação técnica, bolsas e oportunidades.")
+
+    feeds = {
+        "Ministério da Educação (MEC)": "https://www.gov.br/mec/pt-br/assuntos/noticias/rss",
+        "G1 - Educação": "https://g1.globo.com/rss/g1/educacao/",
+        "Educação Profissional": "https://www.gov.br/pt-br/noticias/educacao-e-pesquisa/RSS",
+    }
+
+    for nome, url in feeds.items():
+        st.subheader(f"📌 {nome}")
+        try:
+            noticias = feedparser.parse(url)
+            if hasattr(noticias, "entries") and noticias.entries:
+                for item in noticias.entries[:6]:
+                    published = item.get('published', item.get('pubDate', ''))
+                    st.markdown(f"- [{item.title}]({item.link}) — {published}")
+            else:
+                st.info(f"Nenhuma notícia encontrada em {nome}.")
+        except Exception as e:
+            st.error(f"Erro ao carregar {nome}: {e}")
+        st.write("---")
+
+    st.write("### 🎁 Em breve: recomendação inteligente de cursos personalizados!")
+
+# ---------------------------------------------
+# PÁGINA INICIAL
 # ---------------------------------------------
 def page_home():
     st.title("🏠 Página Inicial")
-    st.write("Bem-vindo à página principal do sistema!")
-    st.write("---")
-
     st.subheader(f"📅 Data: {datetime.date.today().strftime('%d/%m/%Y')}")
     st.write("---")
 
     st.markdown("## 🎯 Área Principal do Dia")
-    st.markdown(f"**<p style='font-size: 32px; color: #1E90FF;'>{st.session_state.area_do_dia}</p>**", unsafe_allow_html=True)
-    st.write("---")
+    st.markdown(f"<h2 style='color:#1E90FF'>{st.session_state.area_do_dia}</h2>", unsafe_allow_html=True)
 
     st.markdown("## 📚 Matéria Sugerida")
-    st.markdown(f"**<p style='font-size: 28px; color: #32CD32;'>{st.session_state.materia_do_dia}</p>**", unsafe_allow_html=True)
-    st.write("---")
+    st.markdown(f"<h2 style='color:#32CD32'>{st.session_state.materia_do_dia}</h2>", unsafe_allow_html=True)
 
-    st.markdown("## 🕘 Tempo de Estudo Sugerido")
-    st.markdown(f"**<p style='font-size: 32px; color: #FFD700;'>{st.session_state.tempo_sugerido}</p>**", unsafe_allow_html=True)
+    st.markdown("## 🕘 Tempo Sugerido")
+    st.markdown(f"<h2 style='color:#FFD700'>{st.session_state.tempo_sugerido}</h2>", unsafe_allow_html=True)
 
-    # dificuldade
     st.write("---")
-    st.markdown("## 🎚️ Escolha a Dificuldade do Estudo:")
+    st.markdown("## 🎚️ Escolha a Dificuldade:")
+
     nivel = st.radio("Selecione:", ["Fácil", "Médio", "Difícil"], index=1)
 
-    if st.button("Confirmar Dificuldade"):
+    if st.button("Confirmar"):
         st.session_state.nivel_estudo = nivel
-        st.success(f"Dificuldade confirmada: **{nivel}**")
-
-    if "nivel_estudo" in st.session_state:
-        st.info(f"Nível atual definido: **{st.session_state.nivel_estudo}**")
+        st.success(f"Nível definido: **{nivel}**")
 
 # ---------------------------------------------
-# REGISTRO DE ESTUDOS + QUIZ (usa area sorteada)
+# REGISTRO DE ESTUDOS (QUIZ)
 # ---------------------------------------------
 def page_registro():
     st.title("📒 Registro de Estudos — Quiz Diário")
@@ -255,54 +275,103 @@ def page_registro():
 
     area = st.session_state.area_do_dia
     nivel = st.session_state.nivel_estudo
+    perguntas = quiz.get(area, {}).get(nivel, [])
 
-    st.subheader(f"Área do dia: **{area}**  —  Dificuldade: **{nivel}**")
+    st.subheader(f"Área: **{area}** — Dificuldade: **{nivel}**")
     st.write("---")
 
-    # pega as perguntas da área e dificuldade
-    perguntas_area = quiz.get(area, {}).get(nivel, [])
-    if not perguntas_area:
-        st.error("Não há perguntas definidas para essa área e nível.")
-        return
-
-    # inicializa armazenamento de respostas se não existir
-    if "respostas_quiz" not in st.session_state:
-        st.session_state.respostas_quiz = {}
-
-    # renderiza perguntas (usa chaves únicas com area e index)
-    for i, q in enumerate(perguntas_area):
+    # -------------------------
+    # EMBARALHAMENTO AQUI
+    # -------------------------
+    for i, q in enumerate(perguntas):
         key = f"{area}_{nivel}_{i}"
-        escolha = st.radio(q["pergunta"], q["alternativas"], key=key)
-        st.session_state.respostas_quiz[key] = escolha
 
-    # botão de envio
+        alternativas_embaralhadas = q["alternativas"][:]
+        random.shuffle(alternativas_embaralhadas)
+
+        # Salvar mapeamento para correção posterior
+        st.session_state[f"map_{key}"] = {
+            "correta": q["correta"],
+            "alternativas": alternativas_embaralhadas
+        }
+
+        st.session_state.respostas_quiz[key] = st.radio(
+            q["pergunta"],
+            alternativas_embaralhadas,
+            key=key
+        )
+
     if st.button("Enviar Respostas"):
         score = 0
         detalhes = []
-        for i, q in enumerate(perguntas_area):
+
+        for i, q in enumerate(perguntas):
             key = f"{area}_{nivel}_{i}"
-            resposta = st.session_state.respostas_quiz.get(key, None)
-            correta = q["correta"]
-            acerto = (resposta == correta)
+            resp = st.session_state.respostas_quiz.get(key, None)
+            correta = st.session_state.get(f"map_{key}", {}).get("correta", None)
+            acerto = (resp == correta)
+
+            detalhes.append({"pergunta": q["pergunta"], "sua": resp, "certa": correta, "acertou": acerto})
             if acerto:
                 score += 1
-            detalhes.append({"pergunta": q["pergunta"], "sua": resposta, "certa": correta, "acertou": acerto})
-        st.success(f"Você acertou **{score}/{len(perguntas_area)}** perguntas!")
-        # mostra feedback detalhado
-        with st.expander("Ver detalhes das respostas"):
-            for d in detalhes:
+
+        st.success(f"Você acertou **{score}/{len(perguntas)}**!")
+
+        st.session_state.historico.append({
+            "data": datetime.date.today().strftime('%d/%m/%Y'),
+            "area": area,
+            "nivel": nivel,
+            "materia": st.session_state.materia_do_dia,
+            "score": score,
+            "total": len(perguntas),
+            "detalhes": detalhes
+        })
+
+# ---------------------------------------------
+# HISTÓRICO
+# ---------------------------------------------
+def page_historico():
+    st.title("📜 Histórico de Estudos")
+
+    if not st.session_state.historico:
+        st.info("Nenhum estudo registrado ainda.")
+        return
+
+    for item in st.session_state.historico:
+        st.write("---")
+        st.subheader(f"📅 {item['data']} — {item['area']} ({item['nivel']})")
+        st.write(f"Matéria: **{item['materia']}**")
+        st.write(f"Resultado: **{item['score']} / {item['total']}**")
+
+        with st.expander("Ver detalhes"):
+            for d in item["detalhes"]:
                 if d["acertou"]:
-                    st.markdown(f"✅ **{d['pergunta']}** — Sua resposta: *{d['sua']}* (correta)")
+                    st.markdown(f"✅ **{d['pergunta']}** — {d['sua']}")
                 else:
-                    st.markdown(f"❌ **{d['pergunta']}** — Sua resposta: *{d['sua']}* → correta: *{d['certa']}*")
+                    st.markdown(f"❌ **{d['pergunta']}** — Sua: {d['sua']} / Correta: {d['certa']}")
 
 # ---------------------------------------------
 # MENU LATERAL
 # ---------------------------------------------
 st.sidebar.title("Menu Principal")
-page = st.sidebar.radio("Navegue entre as páginas:", ["Página Inicial", "Registro"])
 
+page = st.sidebar.radio(
+    "Navegue entre as páginas:",
+    ["Página Inicial", "Registro", "Histórico", "Notícias", "Cursos"]
+)
+
+# Controle das páginas
 if page == "Página Inicial":
     page_home()
-else:
+
+elif page == "Registro":
     page_registro()
+
+elif page == "Histórico":
+    page_historico()
+
+elif page == "Notícias":
+    page_noticias()
+
+elif page == "Cursos":
+    page_cursos()
