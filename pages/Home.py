@@ -263,11 +263,8 @@ def page_home():
         st.session_state.nivel_estudo = nivel
         st.success(f"Nível definido: **{nivel}**")
 
-# ---------------------------------------------
-# REGISTRO DE ESTUDOS (QUIZ)
-# ---------------------------------------------
-def page_registro():
-    st.title("📒 Registro de Estudos — Quiz Diário")
+def page_questões():
+    st.title("📒 Bem vindo ao nosso — Quiz Diário")
 
     if "nivel_estudo" not in st.session_state:
         st.warning("⚠️ Defina a dificuldade na Página Inicial primeiro!")
@@ -280,27 +277,45 @@ def page_registro():
     st.subheader(f"Área: **{area}** — Dificuldade: **{nivel}**")
     st.write("---")
 
-    # -------------------------
-    # EMBARALHAMENTO AQUI
-    # -------------------------
+    # ------------------------------
+    # BARRA DE PROGRESSO DO QUIZ
+    # ------------------------------
+    total_perguntas = len(perguntas)
+    respostas_dadas = sum(
+        1 for i in range(total_perguntas)
+        if st.session_state.respostas_quiz.get(f"{area}_{nivel}_{i}") is not None
+    )
+
+    progresso = respostas_dadas / total_perguntas if total_perguntas > 0 else 0
+    st.progress(progresso)
+
+    # ------------------------------
+    # EMBARALHAMENTO CORRIGIDO
+    # ------------------------------
     for i, q in enumerate(perguntas):
         key = f"{area}_{nivel}_{i}"
 
-        alternativas_embaralhadas = q["alternativas"][:]
-        random.shuffle(alternativas_embaralhadas)
+        # Embaralha somente uma vez
+        if f"map_{key}" not in st.session_state:
+            alternativas_embaralhadas = q["alternativas"][:]
+            random.shuffle(alternativas_embaralhadas)
 
-        # Salvar mapeamento para correção posterior
-        st.session_state[f"map_{key}"] = {
-            "correta": q["correta"],
-            "alternativas": alternativas_embaralhadas
-        }
+            st.session_state[f"map_{key}"] = {
+                "correta": q["correta"],
+                "alternativas": alternativas_embaralhadas
+            }
+
+        alternativas = st.session_state[f"map_{key}"]["alternativas"]
 
         st.session_state.respostas_quiz[key] = st.radio(
             q["pergunta"],
-            alternativas_embaralhadas,
+            alternativas,
             key=key
         )
 
+    # ------------------------------
+    # BOTÃO PARA ENVIAR
+    # ------------------------------
     if st.button("Enviar Respostas"):
         score = 0
         detalhes = []
@@ -308,15 +323,35 @@ def page_registro():
         for i, q in enumerate(perguntas):
             key = f"{area}_{nivel}_{i}"
             resp = st.session_state.respostas_quiz.get(key, None)
-            correta = st.session_state.get(f"map_{key}", {}).get("correta", None)
+            correta = st.session_state[f"map_{key}"]["correta"]
             acerto = (resp == correta)
 
             detalhes.append({"pergunta": q["pergunta"], "sua": resp, "certa": correta, "acertou": acerto})
             if acerto:
                 score += 1
 
+        # Resultado
         st.success(f"Você acertou **{score}/{len(perguntas)}**!")
 
+        # ------------------------------
+        # ESTATÍSTICAS DE DESEMPENHO
+        # ------------------------------
+        percentual = (score / len(perguntas)) * 100
+        st.subheader("📊 Estatísticas do Desempenho")
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Acertos", score)
+        col2.metric("Total", len(perguntas))
+        col3.metric("Desempenho (%)", f"{percentual:.1f}%")
+
+        if percentual == 100:
+            st.success("🎉 Perfeito! Você gabaritou!")
+        elif percentual >= 70:
+            st.info("👏 Bom trabalho! Continue assim.")
+        else:
+            st.warning("💡 Você pode melhorar! Tente novamente mais tarde.")
+
+        # Salvar no histórico
         st.session_state.historico.append({
             "data": datetime.date.today().strftime('%d/%m/%Y'),
             "area": area,
@@ -324,14 +359,15 @@ def page_registro():
             "materia": st.session_state.materia_do_dia,
             "score": score,
             "total": len(perguntas),
-            "detalhes": detalhes
+            "detalhes": detalhes,
+            "percentual": percentual
         })
 
 # ---------------------------------------------
 # HISTÓRICO
 # ---------------------------------------------
 def page_historico():
-    st.title("📜 Histórico de Estudos")
+    st.title("📜 Registro de Estudos")
 
     if not st.session_state.historico:
         st.info("Nenhum estudo registrado ainda.")
@@ -357,15 +393,15 @@ st.sidebar.title("Menu Principal")
 
 page = st.sidebar.radio(
     "Navegue entre as páginas:",
-    ["Página Inicial", "Registro", "Histórico", "Notícias", "Cursos"]
+    ["Página Inicial", "Questões", "Histórico", "Notícias", "Cursos"]
 )
 
 # Controle das páginas
 if page == "Página Inicial":
     page_home()
 
-elif page == "Registro":
-    page_registro()
+elif page == "Questões":
+    page_questões()
 
 elif page == "Histórico":
     page_historico()
