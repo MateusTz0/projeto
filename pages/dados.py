@@ -3,7 +3,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Dados", page_icon="📄")
 
-# Palavra secreta que libera a visualização
+#senha que libera a visualização
 PALAVRA_CHAVE = "mateus123"
 
 st.title("🔒 Acesso Restrito")
