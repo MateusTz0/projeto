@@ -11,7 +11,6 @@ if "autenticado" not in st.session_state or not st.session_state.autenticado:
     st.warning("⚠️ Você precisa se cadastrar para acessar esta página.")
     st.stop()
 
-# --- Styles
 st.markdown(
     """
     <style>
@@ -25,7 +24,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- Header
 col1, col2 = st.columns([1, 3])
 with col1:
     st.image("https://via.placeholder.com/220x80.png?text=ProFoco+Logo", width=180, caption=None, output_format="PNG")
@@ -35,7 +33,6 @@ with col2:
 
 st.markdown("---")
 
-# --- Quick info cards
 c1, c2, c3 = st.columns(3)
 with c1:
     st.metric(label="Sugestões diárias", value="1 tema / dia")
@@ -46,13 +43,13 @@ with c3:
 
 st.markdown("---")
 
-# --- Conteúdo principal
+#Conteúdo principal
 st.header("Sobre o ProFoco")
 st.write(
     "O ProFoco é um aplicativo criado para ajudar estudantes e profissionais a manterem uma rotina de estudos mais organizada, consistente e motivadora. Receba sugestões de temas diários alinhadas com seus objetivos e disponibilidade."
 )
 
-# Expanders for sections
+
 with st.expander("Como funciona", expanded=False):
     st.write(
         "O ProFoco analisa seus objetivos, áreas de interesse e disponibilidade diária para sugerir temas de estudo personalizados. \n\n" 
@@ -73,7 +70,7 @@ with st.expander("Recursos principais", expanded=True):
 
 st.markdown("---")
 
-# Mission and CTA
+# Missão
 st.subheader("Nossa missão")
 st.write("Ajudar você a estudar com mais clareza, foco e propósito — todos os dias.")
 
@@ -87,11 +84,11 @@ with cols[1]:
 
 st.markdown("---")
 
-# Team and contact
+#contato
 st.subheader("Equipe & Contato")
 st.write("Equipe pequena e ágil focada em produto, design e educação.\nPara parcerias e suporte: contato@profoco.app")
 
-# Downloadable brochure (sample)
+#baixar folheto sobre o profoco
 brochure_md = """# ProFoco - Folheto\n\nProFoco é seu assistente de estudos diário...\n\n- Sugestão diária de tema\n- Registro de progresso\n- Ajuste inteligente\n"""
 
 if st.download_button("Baixar folheto (PDF demo)", data=BytesIO(brochure_md.encode("utf-8")), file_name="profoco_folheto_demo.txt", mime="text/plain"):
@@ -99,14 +96,12 @@ if st.download_button("Baixar folheto (PDF demo)", data=BytesIO(brochure_md.enco
 
 st.markdown("---")
 
-# Short / Long toggle
+#resumir página
 if st.checkbox("Versão curta da página", value=False):
     st.markdown("**ProFoco** — sugestão diária de tema para ajudar sua rotina de estudos. Simples, pessoal e eficiente.")
 
-# Footer
 st.markdown("<div class='muted'>© {year} ProFoco — Feito com foco e café.</div>".format(year=2025), unsafe_allow_html=True)
 
-# Optional: show raw 'Sobre' copy for AppStore / Pitch
 with st.expander("Texto para App Store / Pitch", expanded=False):
     st.code(
         """
@@ -116,5 +111,3 @@ ProFoco — Seu assistente diário de estudos. Receba um tema por dia, acompanhe
 - Ajuste inteligente ao seu ritmo
 """
     )
-
-# End of file
