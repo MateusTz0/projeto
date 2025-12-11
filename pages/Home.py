@@ -12,7 +12,6 @@ if "autenticado" not in st.session_state or not st.session_state.autenticado:
     st.warning("⚠️ Você precisa se cadastrar para acessar esta página.")
     st.stop()
 
-# GARANTIR LISTAS NO SESSION STATE
 if "usuarios" not in st.session_state:
     st.session_state.usuarios = []
 if "respostas_quiz" not in st.session_state:
@@ -20,9 +19,9 @@ if "respostas_quiz" not in st.session_state:
 if "historico" not in st.session_state:
     st.session_state.historico = []
 
-# ---------------------------------------------
+# ----------------
 # DADOS DO SISTEMA
-# ---------------------------------------------
+# ----------------
 
 areas_principais = [
     "Linguagens",
@@ -42,9 +41,9 @@ materias_ciencias_natureza = ["Biologia", "Química", "Física"]
 materias_matematica = ["Álgebra", "Geometria", "Trigonometria"]
 materias_redação = ["Acentuação", "Caligrafia", "Estrutura"]
 
-# ---------------------------------------------
-# SORTEIO DO FOCO DIÁRIO
-# ---------------------------------------------
+# ----------------------
+# SORTEIO DA MATÉRIA DO DIA
+# ----------------------
 if "area_do_dia" not in st.session_state:
     area_do_dia = random.choice(areas_principais)
     st.session_state.area_do_dia = area_do_dia
@@ -67,9 +66,9 @@ if "area_do_dia" not in st.session_state:
     minutos = tempo % 60
     st.session_state.tempo_sugerido = f"{horas:02}h {minutos:02}m"
 
-# ---------------------------------------------
-# QUIZ COMPLETO (RESTAURADO)
-# ---------------------------------------------
+# --------
+# QUESTÕES
+# --------
 
 quiz = {
     "Linguagens": {
@@ -181,9 +180,9 @@ quiz = {
     }
 }
 
-# ---------------------------------------------
+# ------------------------------------
 # PÁGINAS: Notícias e Cursos (via RSS)
-# ---------------------------------------------
+# ------------------------------------
 
 def page_noticias():
     st.title("📰 Notícias - Atualidades do Dia")
@@ -237,9 +236,9 @@ def page_cursos():
 
     st.write("### 🎁 Em breve: recomendação inteligente de cursos personalizados!")
 
-# ---------------------------------------------
+# --------------
 # PÁGINA INICIAL
-# ---------------------------------------------
+# --------------
 def page_home():
     st.title("🏠 Página Inicial")
     st.subheader(f"📅 Data: {datetime.date.today().strftime('%d/%m/%Y')}")
@@ -277,9 +276,9 @@ def page_questões():
     st.subheader(f"Área: **{area}** — Dificuldade: **{nivel}**")
     st.write("---")
 
-    # ------------------------------
+    # --------------------------
     # BARRA DE PROGRESSO DO QUIZ
-    # ------------------------------
+    # --------------------------
     total_perguntas = len(perguntas)
     respostas_dadas = sum(
         1 for i in range(total_perguntas)
@@ -289,13 +288,12 @@ def page_questões():
     progresso = respostas_dadas / total_perguntas if total_perguntas > 0 else 0
     st.progress(progresso)
 
-    # ------------------------------
-    # EMBARALHAMENTO CORRIGIDO
-    # ------------------------------
+    # -----------------------
+    # EMBARALHAMENTO DAS QUESTÕES
+    # -----------------------
     for i, q in enumerate(perguntas):
         key = f"{area}_{nivel}_{i}"
 
-        # Embaralha somente uma vez
         if f"map_{key}" not in st.session_state:
             alternativas_embaralhadas = q["alternativas"][:]
             random.shuffle(alternativas_embaralhadas)
@@ -313,9 +311,9 @@ def page_questões():
             key=key
         )
 
-    # ------------------------------
-    # BOTÃO PARA ENVIAR
-    # ------------------------------
+    # -----------------
+    # BOTÃO DE ENVIAR
+    # -----------------
     if st.button("Enviar Respostas"):
         score = 0
         detalhes = []
@@ -333,9 +331,9 @@ def page_questões():
         # Resultado
         st.success(f"Você acertou **{score}/{len(perguntas)}**!")
 
-        # ------------------------------
+        # -------------------------
         # ESTATÍSTICAS DE DESEMPENHO
-        # ------------------------------
+        # -------------------------
         percentual = (score / len(perguntas)) * 100
         st.subheader("📊 Estatísticas do Desempenho")
 
@@ -363,9 +361,9 @@ def page_questões():
             "percentual": percentual
         })
 
-# ---------------------------------------------
+# ----------
 # HISTÓRICO
-# ---------------------------------------------
+# ---------
 def page_historico():
     st.title("📜 Registro de Estudos")
 
@@ -386,9 +384,9 @@ def page_historico():
                 else:
                     st.markdown(f"❌ **{d['pergunta']}** — Sua: {d['sua']} / Correta: {d['certa']}")
 
-# ---------------------------------------------
+# ------------
 # MENU LATERAL
-# ---------------------------------------------
+# -------------
 st.sidebar.title("Menu Principal")
 
 page = st.sidebar.radio(
